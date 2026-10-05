@@ -4,6 +4,10 @@
   "private": true,
   "type": "module",
   "scripts": {"dev":"vite","build":"vite build","preview":"vite preview"},
-  "dependencies": {"@neondatabase/serverless":"^1.0.2"},
+  "dependencies": {
+    "@neondatabase/neon-js":"^1.0.0",
+    "@neondatabase/serverless":"^1.0.2",
+    "jose":"^6.1.0"
+  },
   "devDependencies": {"vite":"^7.1.3"}
 }
