@@ -70,16 +70,22 @@ async function signIn(email, password) {
 
 async function requestPasswordReset() {
   message('Enviando enlace seguro…');
-  const redirectTo = location.origin + location.pathname;
-  const result = await authClient.requestPasswordReset({
-    email: ADMIN_EMAIL,
-    redirectTo
-  });
-  if (result?.error) {
-    message(result.error.message || 'No se pudo enviar el correo de recuperación.');
-    return;
+  try {
+    const redirectTo = location.origin + location.pathname;
+    const operation = authClient.requestPasswordReset({
+      email: ADMIN_EMAIL,
+      redirectTo
+    });
+    const result = await Promise.race([
+      operation,
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Tiempo de espera agotado')), 12000))
+    ]);
+    if (result?.error) throw new Error(result.error.message || 'Neon rechazó la solicitud.');
+    message('Revisa fabiangzz54@gmail.com. Si la cuenta admite recuperación por contraseña, recibirás el enlace.');
+  } catch (error) {
+    console.error('BRavo password reset:', error);
+    message('No se pudo enviar el correo. Neon Auth no completó la recuperación; no vuelvas a intentarlo por ahora.');
   }
-  message('Revisa fabiangzz54@gmail.com. Te enviamos un enlace para crear una contraseña nueva.');
 }
 
 async function resetPassword(newPassword, confirmPassword) {
