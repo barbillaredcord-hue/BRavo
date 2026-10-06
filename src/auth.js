@@ -1,7 +1,6 @@
 import { createAuthClient } from '@neondatabase/auth';
-import { SupabaseAuthAdapter } from '@neondatabase/auth/vanilla/adapters';
 
-const authClient = createAuthClient(import.meta.env.VITE_NEON_AUTH_URL, { adapter: SupabaseAuthAdapter() });
+const authClient = createAuthClient(import.meta.env.VITE_NEON_AUTH_URL);
 const ADMIN_EMAIL = 'fabiangzz54@gmail.com';
 
 function message(text) {
@@ -54,13 +53,26 @@ async function refresh() {
   }
 }
 
+async function signInGoogle() {
+  message('Abriendo acceso seguro con Google…');
+  try {
+    await authClient.signIn.social({
+      provider: 'google',
+      callbackURL: location.origin + location.pathname
+    });
+  } catch (error) {
+    console.error('BRavo Google sign-in:', error);
+    message('No se pudo iniciar el acceso con Google.');
+  }
+}
+
 async function signIn(email, password) {
   if (String(email).trim().toLowerCase() !== ADMIN_EMAIL) {
     message('Este acceso está reservado al administrador autorizado.');
     return;
   }
   message('Verificando…');
-  const result = await authClient.signInWithPassword({ email: ADMIN_EMAIL, password });
+  const result = await authClient.signIn.email({ email: ADMIN_EMAIL, password });
   if (result?.error) {
     message(result.error.message || 'No se pudo iniciar sesión.');
     return;
@@ -70,20 +82,7 @@ async function signIn(email, password) {
 }
 
 async function requestPasswordReset() {
-  message('Enviando enlace seguro…');
-  try {
-    const redirectTo = location.origin + location.pathname;
-    const operation = authClient.resetPasswordForEmail(ADMIN_EMAIL, { redirectTo });
-    const result = await Promise.race([
-      operation,
-      new Promise((_, reject) => setTimeout(() => reject(new Error('Tiempo de espera agotado')), 12000))
-    ]);
-    if (result?.error) throw new Error(result.error.message || 'Neon rechazó la solicitud.');
-    message('Revisa fabiangzz54@gmail.com. Si la cuenta admite recuperación por contraseña, recibirás el enlace.');
-  } catch (error) {
-    console.error('BRavo password reset:', error);
-    message('No se pudo enviar el correo. Neon Auth no completó la recuperación; no vuelvas a intentarlo por ahora.');
-  }
+  message('La recuperación por correo está desactivada. Usa “Continuar con Google”.');
 }
 
 async function resetPassword(newPassword, confirmPassword) {
@@ -134,7 +133,7 @@ async function updateStatus(id, status) {
   if (!response.ok) throw new Error('No se pudo actualizar el estado.');
 }
 
-window.bravoAuth = { refresh, signIn, signOut, loadRequests, updateStatus, requestPasswordReset, resetPassword };
+window.bravoAuth = { refresh, signIn, signInGoogle, signOut, loadRequests, updateStatus, requestPasswordReset, resetPassword };
 
 if (new URLSearchParams(location.search).get('token')) {
   window.addEventListener('DOMContentLoaded', () => refresh());
