@@ -1,6 +1,7 @@
 import { createAuthClient } from '@neondatabase/auth';
+import { SupabaseAuthAdapter } from '@neondatabase/auth/vanilla/adapters';
 
-const authClient = createAuthClient(import.meta.env.VITE_NEON_AUTH_URL);
+const authClient = createAuthClient(import.meta.env.VITE_NEON_AUTH_URL, { adapter: SupabaseAuthAdapter() });
 const ADMIN_EMAIL = 'fabiangzz54@gmail.com';
 
 function message(text) {
@@ -59,7 +60,7 @@ async function signIn(email, password) {
     return;
   }
   message('Verificando…');
-  const result = await authClient.signIn.email({ email: ADMIN_EMAIL, password });
+  const result = await authClient.signInWithPassword({ email: ADMIN_EMAIL, password });
   if (result?.error) {
     message(result.error.message || 'No se pudo iniciar sesión.');
     return;
@@ -72,10 +73,7 @@ async function requestPasswordReset() {
   message('Enviando enlace seguro…');
   try {
     const redirectTo = location.origin + location.pathname;
-    const operation = authClient.requestPasswordReset({
-      email: ADMIN_EMAIL,
-      redirectTo
-    });
+    const operation = authClient.resetPasswordForEmail(ADMIN_EMAIL, { redirectTo });
     const result = await Promise.race([
       operation,
       new Promise((_, reject) => setTimeout(() => reject(new Error('Tiempo de espera agotado')), 12000))
