@@ -50,15 +50,19 @@ async function refresh() {
     const hasSession = !!session?.data?.session;
     if (hasSession) {
       document.getElementById('admin')?.classList.remove('hidden');
-      document.getElementById('admin')?.scrollIntoView({ behavior: 'smooth' });
-    }
-    const rows = await loadRequests();
-    if (document.getElementById('adminContent')?.classList.contains('hidden') === false) {
+      document.getElementById('adminLogin')?.classList.add('hidden');
+      document.getElementById('adminContent')?.classList.remove('hidden');
+      const rows = await loadRequests();
       window.adminRequests = rows;
-      await window.renderAdmin?.('all');
+      document.getElementById('admin')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return rows;
     }
+    document.getElementById('adminLogin')?.classList.remove('hidden');
+    document.getElementById('adminContent')?.classList.add('hidden');
+    return [];
   } catch (error) {
     console.error('BRavo auth refresh:', error);
+    return [];
   }
 }
 
