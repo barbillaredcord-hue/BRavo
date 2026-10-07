@@ -1,54 +1,32 @@
 <!doctype html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>BRavo Admin</title>
-  <style>
-    :root{font-family:Inter,system-ui;background:#f8faf5;color:#10130f;--green:#149447;--deep:#0b2918;--m:#647064;--l:#dce4d8}
-    *{box-sizing:border-box}body{margin:0;background:linear-gradient(135deg,#fff 0,#f7faf2 58%,#eef8e6 100%)}
-    main{max-width:1120px;margin:auto;padding:32px 22px 70px}.top{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--l);padding-bottom:18px}
-    .logo{font-size:26px;font-weight:900}.logo b{color:var(--green)}button{font:inherit}.panel{background:#fff;border:1px solid #d6e1d3;border-radius:20px;padding:22px;margin-top:28px}
-    .tag{color:var(--green);text-transform:uppercase;letter-spacing:.15em;font-size:11px;font-weight:850}h1{font-size:44px;letter-spacing:-.04em;margin:10px 0}
-    .muted{color:var(--m)}.primary,.secondary{border-radius:12px;padding:12px 16px;font-weight:800;cursor:pointer}.primary{border:0;background:var(--green);color:#fff}.secondary{background:#fff;color:#17351f;border:1px solid #9bb59f}
-    .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:22px 0}.stat{background:#fff;border:1px solid #d6e1d3;border-radius:16px;padding:16px}.stat small{display:block;color:var(--m)}.stat b{font-size:26px}
-    .filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}.filters button{border:1px solid #c6d6c4;background:#fff;border-radius:999px;padding:8px 11px;cursor:pointer}
-    .requests{display:grid;gap:10px}.request{background:#fff;border:1px solid #d6e1d3;border-radius:18px;padding:18px;display:grid;grid-template-columns:1fr auto;gap:16px}.meta{color:var(--m);font-size:13px}.request select{border:1px solid #c6d6c4;border-radius:10px;padding:9px;background:#fbfcf9}.hidden{display:none}.empty{padding:28px;text-align:center;border:1px dashed #b9cbb6;border-radius:18px;color:var(--m)}
-    @media(max-width:720px){.stats{grid-template-columns:1fr 1fr}.request{grid-template-columns:1fr}}
-  </style>
-  <script type="module" src="/src/admin.js"></script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BRavo Admin</title>
+<style>
+:root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,sans-serif;color:#111713;--green:#087a45;--deep:#071d15;--muted:#69716d;--line:#dce5de;--bg:#f4f8f3}*{box-sizing:border-box}body{margin:0;background:var(--bg)}
+button,input,select,textarea{font:inherit}.hidden{display:none!important}
+.loginWrap{max-width:560px;margin:90px auto;padding:24px}.login{background:#fff;border:1px solid var(--line);border-radius:22px;padding:30px;box-shadow:0 12px 40px #153b2010}.tag{font-size:11px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:#0a8b50}.primary,.outline{border-radius:12px;padding:12px 17px;font-weight:800;cursor:pointer}.primary{background:var(--green);color:#fff;border:0}.outline{background:#fff;border:1px solid #cfd9d1;color:#1c2c23}
+.shell{min-height:100vh;display:grid;grid-template-columns:230px 1fr}.sidebar{background:linear-gradient(180deg,#071d15,#061912);color:#fff;padding:26px 16px;display:flex;flex-direction:column}.brand{font-size:30px;font-weight:950;margin:0 12px 34px}.brand span{color:#32b76d}.nav{display:grid;gap:7px}.nav button{border:0;background:transparent;color:#dce9e1;text-align:left;padding:13px 15px;border-radius:12px;cursor:pointer}.nav button.active{background:#0a643e;color:#fff;border-left:4px solid #31dc7b}.sideFoot{margin-top:auto;border:1px solid #176642;border-radius:15px;padding:15px;background:#093322}.sideFoot b{font-size:20px}
+.content{min-width:0}.header{height:104px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 30px}.header h1{margin:0;font-size:28px}.header p{margin:4px 0 0;color:var(--muted)}.user{display:flex;align-items:center;gap:12px}.avatar{width:46px;height:46px;border-radius:50%;background:#08643d;color:#fff;display:grid;place-items:center;font-weight:900}
+.workspace{padding:26px 30px 45px;background:linear-gradient(135deg,#f7faf6,#eef8e9)}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}.stat{background:#fff;border:1px solid var(--line);border-radius:17px;padding:20px;box-shadow:0 5px 18px #153b2008}.stat small{color:var(--muted)}.stat b{display:block;font-size:32px;margin-top:4px}.stat .icon{float:right;font-size:24px}
+.toolbar{display:grid;grid-template-columns:minmax(260px,1fr) 190px 170px;gap:12px;margin:22px 0}.toolbar input,.toolbar select{width:100%;background:#fff;border:1px solid #d4ded6;border-radius:12px;padding:13px 14px}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) 355px;gap:16px}.tableCard,.detail{background:#fff;border:1px solid var(--line);border-radius:18px;overflow:hidden}.tableHead,.row{display:grid;grid-template-columns:62px 1fr 130px 1.5fr 115px 120px;gap:10px;align-items:center;padding:14px 16px}.tableHead{font-size:12px;font-weight:800;color:#525d56;background:#fbfcfb;border-bottom:1px solid var(--line)}.row{border-bottom:1px solid #e8eee9;cursor:pointer;font-size:13px}.row:hover,.row.selected{background:#eff9f0}.pill{display:inline-block;border-radius:999px;padding:6px 9px;font-size:11px;font-weight:800}.cat{background:#ddf7e4;color:#126838}.new{background:#fff0bd;color:#a86b00}.progress{background:#dbeeff;color:#1767c2}.closed{background:#dff5e4;color:#16663a}
+.detail{padding:19px;align-self:start}.detail h2{margin:0 0 18px}.detail dl{display:grid;grid-template-columns:85px 1fr;gap:10px;font-size:13px}.detail dt{color:var(--muted)}.detail dd{margin:0;font-weight:650}.message{background:#f5f6f5;border-radius:12px;padding:14px;margin:16px 0;font-size:13px;line-height:1.45}.detail select,.detail textarea{width:100%;border:1px solid #d5ddd7;border-radius:11px;padding:11px;background:#fff}.detail textarea{min-height:90px;margin:8px 0 13px}.save{width:100%}.empty{padding:34px;text-align:center;color:var(--muted)}
+@media(max-width:1000px){.shell{grid-template-columns:1fr}.sidebar{display:none}.grid{grid-template-columns:1fr}.detail{display:none}.stats{grid-template-columns:1fr 1fr}.tableHead,.row{grid-template-columns:55px 1fr 120px 1fr 105px}.tableHead>*:nth-child(6),.row>*:nth-child(6){display:none}}
+@media(max-width:650px){.header{padding:18px;height:auto}.header p,.user div:nth-child(2){display:none}.workspace{padding:18px}.stats{grid-template-columns:1fr 1fr;gap:10px}.toolbar{grid-template-columns:1fr}.tableHead,.row{grid-template-columns:45px 1fr 95px}.tableHead>*:nth-child(3),.row>*:nth-child(3),.tableHead>*:nth-child(4),.row>*:nth-child(4){display:none}}
+</style>
+<script type="module" src="/src/admin.js"></script>
 </head>
 <body>
-<main>
-  <div class="top"><div class="logo"><b>BR</b>avo Admin</div><button class="secondary" onclick="location.href='/'">Volver a BRavo</button></div>
-  <section id="login" class="panel">
-    <div class="tag">Acceso protegido</div>
-    <h1>Administración</h1>
-    <p class="muted">Accede con la cuenta de Google autorizada. El servidor valida tu identidad antes de mostrar solicitudes.</p>
-    <button class="primary" onclick="adminGoogleLogin()">Continuar con Google →</button>
-    <p id="msg" class="meta"></p>
-  </section>
-  <section id="admin" class="hidden">
-    <div class="panel">
-      <div class="tag">BRavo Admin · 0.1F</div>
-      <h1>Solicitudes y seguimiento</h1>
-      <p class="muted">Solicitudes persistidas en Neon y protegidas por autenticación.</p>
-      <div class="stats">
-        <div class="stat"><small>Total</small><b id="total">0</b></div>
-        <div class="stat"><small>Nuevas</small><b id="newCount">0</b></div>
-        <div class="stat"><small>En proceso</small><b id="progressCount">0</b></div>
-        <div class="stat"><small>Cerradas</small><b id="closedCount">0</b></div>
-      </div>
-      <div class="filters">
-        <button onclick="adminRender('all')">Todas</button>
-        <button onclick="adminRender('Nueva')">Nuevas</button>
-        <button onclick="adminRender('En proceso')">En proceso</button>
-        <button onclick="adminRender('Cerrada')">Cerradas</button>
-      </div>
-      <div id="requests" class="requests"></div>
-      <div style="margin-top:18px"><button class="secondary" onclick="adminSignOut()">Cerrar sesión</button></div>
-    </div>
-  </section>
-</main>
-</body>
-</html>
+<section id="login" class="loginWrap"><div class="login"><div class="tag">Acceso protegido</div><h1>BRavo Admin</h1><p>Accede con la cuenta de Google autorizada para gestionar solicitudes.</p><button class="primary" onclick="adminGoogleLogin()">Continuar con Google →</button><p id="msg"></p></div></section>
+<section id="admin" class="shell hidden">
+<aside class="sidebar"><div class="brand"><span>BR</span>avo<small style="display:block;font-size:13px;font-weight:700">Admin</small></div><nav class="nav"><button class="active">▣ &nbsp; Solicitudes</button><button>▥ &nbsp; Estadísticas</button><button>♙ &nbsp; Comunidad</button><button>⚙ &nbsp; Configuración</button></nav><div class="sideFoot"><b>BRavo</b><small style="display:block;margin-top:6px">Comunidad, no sólo catálogo<br>BR Studios · 2026</small></div></aside>
+<div class="content"><header class="header"><div><h1>Panel de solicitudes</h1><p>Gestiona y da seguimiento a las solicitudes de la comunidad.</p></div><div class="user"><div class="avatar">A</div><div><b>Administrador</b><small style="display:block;color:#69716d">Cuenta autorizada</small></div><button class="outline" onclick="adminSignOut()">Cerrar sesión</button></div></header>
+<main class="workspace">
+<div class="stats"><div class="stat"><span class="icon">▣</span><small>Total de solicitudes</small><b id="total">0</b><small>Todas las solicitudes</small></div><div class="stat"><span class="icon">◷</span><small>Nuevas</small><b id="newCount">0</b><small>Por revisar</small></div><div class="stat"><span class="icon">↻</span><small>En proceso</small><b id="progressCount">0</b><small>En seguimiento</small></div><div class="stat"><span class="icon">✓</span><small>Cerradas</small><b id="closedCount">0</b><small>Completadas</small></div></div>
+<div class="toolbar"><input id="search" placeholder="⌕  Buscar por nombre, categoría o mensaje..." oninput="adminSearch(this.value)"><select id="categoryFilter" onchange="adminCategory(this.value)"><option value="all">Todas las categorías</option></select><select onchange="adminRender(this.value)"><option value="all">Todos los estados</option><option>Nueva</option><option>En proceso</option><option>Cerrada</option></select></div>
+<div class="grid"><div class="tableCard"><div class="tableHead"><span>#</span><span>Nombre / negocio</span><span>Categoría</span><span>Mensaje</span><span>Estado</span><span>Fecha</span></div><div id="requests"></div></div>
+<aside id="detail" class="detail"><h2>Detalle de la solicitud</h2><div class="empty">Selecciona una solicitud para ver sus detalles.</div></aside></div>
+</main></div></section>
+</body></html>
