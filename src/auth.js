@@ -67,7 +67,7 @@ async function signInGoogle() {
   try {
     await authClient.signIn.social({
       provider: 'google',
-      callbackURL: location.origin + location.pathname
+      callbackURL: location.origin + location.pathname + '?admin=1'
     });
   } catch (error) {
     console.error('BRavo Google sign-in:', error);
@@ -99,10 +99,17 @@ window.bravoAuth = { refresh, signInGoogle, signOut, loadRequests, updateStatus 
 
 window.addEventListener('DOMContentLoaded', async () => {
   try {
+    const wantsAdmin = new URLSearchParams(location.search).get('admin') === '1';
     const session = await authClient.getSession();
     if (session?.data?.session) {
       document.getElementById('admin')?.classList.remove('hidden');
       await refresh();
+      if (wantsAdmin) {
+        history.replaceState({}, '', location.pathname);
+        requestAnimationFrame(() => {
+          document.getElementById('admin')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+      }
     }
   } catch (error) {
     console.error('BRavo session bootstrap:', error);
