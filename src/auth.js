@@ -2,6 +2,7 @@ import { createAuthClient } from '@neondatabase/auth';
 
 const authClient = createAuthClient(import.meta.env.VITE_NEON_AUTH_URL);
 const ADMIN_EMAIL = 'fabiangzz54@gmail.com';
+let currentJWT = '';
 
 function message(text) {
   const el = document.getElementById('adminAuthMessage');
@@ -14,9 +15,20 @@ function resetMessage(text) {
 }
 
 async function bearer() {
-  const token = await authClient.getJWTToken?.();
-  if (!token) throw new Error('No active session');
-  return token;
+  if (currentJWT) return currentJWT;
+  const session = await authClient.getSession();
+  const token = session?.data?.session?.access_token || session?.data?.session?.accessToken || '';
+  if (token) {
+    currentJWT = token;
+    return token;
+  }
+  const jwt = await Promise.race([
+    authClient.getJWTToken?.(),
+    new Promise((_, reject) => setTimeout(() => reject(new Error('Auth timeout')), 8000))
+  ]);
+  if (!jwt) throw new Error('No active session');
+  currentJWT = jwt;
+  return jwt;
 }
 
 async function loadRequests() {
@@ -77,8 +89,13 @@ async function signIn(email, password) {
     message(result.error.message || 'No se pudo iniciar sesión.');
     return;
   }
-  message('');
-  await window.renderAdmin?.('all');
+  currentJWT = result?.data?.session?.access_token || result?.data?.session?.accessToken || '';
+  message('Sesión iniciada. Cargando Admin…');
+  const rows = await loadRequests();
+  if (document.getElementById('adminContent')?.classList.contains('hidden') === false) {
+    window.adminRequests = rows;
+    await window.renderAdmin?.('all');
+  }
 }
 
 async function requestPasswordReset() {
@@ -117,6 +134,7 @@ async function resetPassword(newPassword, confirmPassword) {
 }
 
 async function signOut() {
+  currentJWT = '';
   await authClient.signOut();
   document.getElementById('adminContent')?.classList.add('hidden');
   document.getElementById('adminLogin')?.classList.remove('hidden');
