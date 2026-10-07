@@ -65,9 +65,10 @@ async function refresh() {
 async function signInGoogle() {
   message('Abriendo acceso seguro con Google…');
   try {
+    sessionStorage.setItem('bravo_admin_after_oauth', '1');
     await authClient.signIn.social({
       provider: 'google',
-      callbackURL: location.origin + location.pathname + '?admin=1'
+      callbackURL: location.origin + location.pathname
     });
   } catch (error) {
     console.error('BRavo Google sign-in:', error);
@@ -98,19 +99,39 @@ window.bravoAuth = { refresh, signInGoogle, signOut, loadRequests, updateStatus 
 
 
 window.addEventListener('DOMContentLoaded', async () => {
+  const wantsAdmin =
+    sessionStorage.getItem('bravo_admin_after_oauth') === '1' ||
+    new URLSearchParams(location.search).get('admin') === '1';
+
+  if (!wantsAdmin) return;
+
   try {
-    const wantsAdmin = new URLSearchParams(location.search).get('admin') === '1';
-    const session = await authClient.getSession();
-    if (session?.data?.session) {
-      document.getElementById('admin')?.classList.remove('hidden');
-      await refresh();
-      if (wantsAdmin) {
-        history.replaceState({}, '', location.pathname);
-        requestAnimationFrame(() => {
-          document.getElementById('admin')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        });
-      }
+    let session = null;
+
+    for (let attempt = 0; attempt < 8; attempt += 1) {
+      const result = await authClient.getSession();
+      session = result?.data?.session || null;
+      if (session) break;
+      await new Promise(resolve => setTimeout(resolve, 500));
     }
+
+    if (!session) {
+      message('La sesión de Google todavía no está disponible. Pulsa Admin y vuelve a intentar.');
+      return;
+    }
+
+    sessionStorage.removeItem('bravo_admin_after_oauth');
+    history.replaceState({}, '', location.pathname);
+
+    document.getElementById('admin')?.classList.remove('hidden');
+    await refresh();
+
+    requestAnimationFrame(() => {
+      document.getElementById('admin')?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+      });
+    });
   } catch (error) {
     console.error('BRavo session bootstrap:', error);
   }
