@@ -18,4 +18,28 @@ window.adminSignOut=()=>signOut();window.adminRender=render;window.adminSelect=s
 window.adminSearch=v=>{query=v.toLowerCase().trim();render(stateFilter)};
 window.adminCategory=v=>{categoryFilter=v;render(stateFilter)};
 window.adminSaveDetail=id=>updateStatus(id,document.getElementById('detailStatus').value).catch(e=>alert(e.message));
-window.addEventListener('DOMContentLoaded',async()=>{try{const s=await authClient.getSession();if(s?.data?.session)await load()}catch(e){msg(e.message==='No active session'?'':e.message)}});
+window.addEventListener('DOMContentLoaded',async()=>{
+  try{
+    const params=new URLSearchParams(location.search);
+    const authError=params.get('error')||params.get('error_description');
+    if(authError){msg('Google devolvió un error de autenticación: '+authError);return;}
+
+    msg('Comprobando sesión…');
+    let session=null;
+    for(let i=0;i<10;i++){
+      const s=await authClient.getSession();
+      session=s?.data?.session||null;
+      if(session) break;
+      await new Promise(r=>setTimeout(r,500));
+    }
+
+    if(session){
+      history.replaceState({},'',location.pathname);
+      await load();
+    }else{
+      msg('Google regresó a BRavo, pero Neon aún no reconoce la sesión. Vuelve a pulsar “Continuar con Google”.');
+    }
+  }catch(e){
+    msg(e.message==='No active session'?'':e.message);
+  }
+});
