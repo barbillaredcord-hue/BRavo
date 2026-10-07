@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>BRavo Admin</title>
+  <style>
+    :root{font-family:Inter,system-ui;background:#f8faf5;color:#10130f;--green:#149447;--deep:#0b2918;--m:#647064;--l:#dce4d8}
+    *{box-sizing:border-box}body{margin:0;background:linear-gradient(135deg,#fff 0,#f7faf2 58%,#eef8e6 100%)}
+    main{max-width:1120px;margin:auto;padding:32px 22px 70px}.top{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--l);padding-bottom:18px}
+    .logo{font-size:26px;font-weight:900}.logo b{color:var(--green)}button{font:inherit}.panel{background:#fff;border:1px solid #d6e1d3;border-radius:20px;padding:22px;margin-top:28px}
+    .tag{color:var(--green);text-transform:uppercase;letter-spacing:.15em;font-size:11px;font-weight:850}h1{font-size:44px;letter-spacing:-.04em;margin:10px 0}
+    .muted{color:var(--m)}.primary,.secondary{border-radius:12px;padding:12px 16px;font-weight:800;cursor:pointer}.primary{border:0;background:var(--green);color:#fff}.secondary{background:#fff;color:#17351f;border:1px solid #9bb59f}
+    .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:22px 0}.stat{background:#fff;border:1px solid #d6e1d3;border-radius:16px;padding:16px}.stat small{display:block;color:var(--m)}.stat b{font-size:26px}
+    .filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}.filters button{border:1px solid #c6d6c4;background:#fff;border-radius:999px;padding:8px 11px;cursor:pointer}
+    .requests{display:grid;gap:10px}.request{background:#fff;border:1px solid #d6e1d3;border-radius:18px;padding:18px;display:grid;grid-template-columns:1fr auto;gap:16px}.meta{color:var(--m);font-size:13px}.request select{border:1px solid #c6d6c4;border-radius:10px;padding:9px;background:#fbfcf9}.hidden{display:none}.empty{padding:28px;text-align:center;border:1px dashed #b9cbb6;border-radius:18px;color:var(--m)}
+    @media(max-width:720px){.stats{grid-template-columns:1fr 1fr}.request{grid-template-columns:1fr}}
+  </style>
+  <script type="module" src="/src/admin.js"></script>
+</head>
+<body>
+<main>
+  <div class="top"><div class="logo"><b>BR</b>avo Admin</div><button class="secondary" onclick="location.href='/'">Volver a BRavo</button></div>
+  <section id="login" class="panel">
+    <div class="tag">Acceso protegido</div>
+    <h1>Administración</h1>
+    <p class="muted">Accede con la cuenta de Google autorizada. El servidor valida tu identidad antes de mostrar solicitudes.</p>
+    <button class="primary" onclick="adminGoogleLogin()">Continuar con Google →</button>
+    <p id="msg" class="meta"></p>
+  </section>
+  <section id="admin" class="hidden">
+    <div class="panel">
+      <div class="tag">BRavo Admin · 0.1F</div>
+      <h1>Solicitudes y seguimiento</h1>
+      <p class="muted">Solicitudes persistidas en Neon y protegidas por autenticación.</p>
+      <div class="stats">
+        <div class="stat"><small>Total</small><b id="total">0</b></div>
+        <div class="stat"><small>Nuevas</small><b id="newCount">0</b></div>
+        <div class="stat"><small>En proceso</small><b id="progressCount">0</b></div>
+        <div class="stat"><small>Cerradas</small><b id="closedCount">0</b></div>
+      </div>
+      <div class="filters">
+        <button onclick="adminRender('all')">Todas</button>
+        <button onclick="adminRender('Nueva')">Nuevas</button>
+        <button onclick="adminRender('En proceso')">En proceso</button>
+        <button onclick="adminRender('Cerrada')">Cerradas</button>
+      </div>
+      <div id="requests" class="requests"></div>
+      <div style="margin-top:18px"><button class="secondary" onclick="adminSignOut()">Cerrar sesión</button></div>
+    </div>
+  </section>
+</main>
+</body>
+</html>
