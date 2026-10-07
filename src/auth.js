@@ -45,9 +45,20 @@ async function loadRequests() {
 }
 
 async function refresh() {
-  const rows = await loadRequests();
-  if (rows.length || document.getElementById('adminContent')?.classList.contains('hidden') === false) {
-    await window.renderAdmin?.('all');
+  try {
+    const session = await authClient.getSession();
+    const hasSession = !!session?.data?.session;
+    if (hasSession) {
+      document.getElementById('admin')?.classList.remove('hidden');
+      document.getElementById('admin')?.scrollIntoView({ behavior: 'smooth' });
+    }
+    const rows = await loadRequests();
+    if (document.getElementById('adminContent')?.classList.contains('hidden') === false) {
+      window.adminRequests = rows;
+      await window.renderAdmin?.('all');
+    }
+  } catch (error) {
+    console.error('BRavo auth refresh:', error);
   }
 }
 
@@ -84,3 +95,16 @@ async function updateStatus(id, status) {
 
 window.bravoAuth = { refresh, signInGoogle, signOut, loadRequests, updateStatus };
 
+
+
+window.addEventListener('DOMContentLoaded', async () => {
+  try {
+    const session = await authClient.getSession();
+    if (session?.data?.session) {
+      document.getElementById('admin')?.classList.remove('hidden');
+      await refresh();
+    }
+  } catch (error) {
+    console.error('BRavo session bootstrap:', error);
+  }
+});
