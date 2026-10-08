@@ -74,6 +74,7 @@ async function go(refined=false){
     rt.textContent='Opciones para: “'+value+'”';
     rs.textContent=data.interpretation+' BR Companion organiza posibilidades; tú decides cuál explorar.';
     pills.innerHTML='<span class="pill">'+data.results.length+' opciones encontradas</span>';
+    pills.insertAdjacentHTML('beforeend','<span class="pill">Catálogo demostrativo · proveedores sin verificar</span>');
     const followup=document.getElementById('companionFollowup');
     const question=data.companion?.questions?.[0];
     followup.classList.toggle('hidden',!question||refined);
@@ -81,7 +82,7 @@ async function go(refined=false){
     if(!refined)document.getElementById('companionAnswer').value='';
     if(!data.results.length)rs.textContent+=' Todavía no hay opciones coincidentes; puedes precisar tu necesidad.';
 
-    cards.innerHTML=data.results.map((x,i)=>'<article class="card"><small>'+x.category+'</small><h3>'+x.name+'</h3><p>'+x.type+' · '+x.reference+'</p><div class="why"><b>POR QUÉ PODRÍA SERVIRTE</b><br>'+x.reason+'</div><div class="cardActions"><button onclick="openSearchSpace('+i+')">Ver opción →</button><button class="secondary" onclick="addSearchCompare('+i+')">＋ Comparar</button></div></article>').join('');
+    cards.innerHTML=data.results.map((x,i)=>'<article class="card"><small>Ejemplo · '+escapeBravo(x.category)+'</small><h3>'+escapeBravo(x.name)+'</h3><p>'+escapeBravo(x.type)+' · '+escapeBravo(x.reference)+'</p><div class="why"><b>POR QUÉ PODRÍA SERVIRTE</b><br>'+escapeBravo(x.reason)'</div><div class="cardActions"><button onclick="openSearchSpace('+i+')">Ver opción →</button><button class="secondary" onclick="addSearchCompare('+i+')">＋ Comparar</button></div></article>').join('');
     window.bravoSearchResults=data.results;
     window.bravoCompanionNeed=data.companion||null;
     companionSession.goal=data.companion?.goal||"";saveCompanionContext();
@@ -98,7 +99,7 @@ function openSearchSpace(i){
   const x=window.bravoSearchResults?.[i];if(!x)return;
   currentSpace={k:'search',i,listing:x};currentRoute='search';
   if(!companionSession.selected.some(v=>v.id===x.id)){companionSession.selected.push({id:x.id,name:x.name});saveCompanionContext();}
-  sn.textContent=x.name;sd.textContent=x.type+' · '+x.reference;
+  sn.textContent=x.name+' · Ejemplo no verificado';sd.textContent=x.type+' · '+x.reference;
   relevance.textContent=x.reason+' BRavo lo muestra por coincidencia con tu búsqueda, no porque sea una recomendación pagada.';
   communityName.textContent=x.name;f1.textContent=x.type;f2.textContent=x.reference;f3.textContent='Coincide con tu necesidad';
   services.textContent=x.reason;hours.textContent='Consulta disponibilidad y condiciones antes de contactar';
