@@ -1,3 +1,4 @@
+import { interpretNeed, rankListing } from '../lib/companion.js';
 import { neon } from '@neondatabase/serverless';
 
 const sql = neon(process.env.DATABASE_URL);
@@ -48,32 +49,22 @@ export default async function handler(req,res){
     await ensureCatalog();
     const q=String(req.query?.q||'').trim().toLowerCase().slice(0,200);
     if(!q) return res.status(400).json({ok:false,error:'Missing query'});
-    const terms=q.split(/\s+/).filter(Boolean).slice(0,8);
+    const need=interpretNeed(q);
     const rows=await sql`
       SELECT id,name,category,type,reference,reason,search_text
       FROM bravo_listings
       WHERE active=true
       ORDER BY created_at ASC
     `;
-    const scored=rows.map(r=>{
-      const hay=(r.name+' '+r.category+' '+r.type+' '+r.reference+' '+r.reason+' '+r.search_text).toLowerCase();
-      let score=0;
-      for(const term of terms){
-        if(hay.includes(term)) score+=3;
-        if(r.category.toLowerCase().includes(term)) score+=2;
-        if(r.name.toLowerCase().includes(term)) score+=2;
-      }
-      return {...r,score};
-    }).filter(r=>r.score>0).sort((a,b)=>b.score-a.score).slice(0,6);
-
-    const fallback=scored.length?scored:rows.slice(0,6).map(r=>({...r,score:0}));
+    const scored=rows.map(r=>({...r,score:rankListing(r,need,q)}))
+      .filter(r=>r.score>0).sort((a,b)=>b.score-a.score).slice(0,6);
     return res.status(200).json({
-      ok:true,
-      query:q,
-      interpretation: scored.length
-        ? 'Encontramos coincidencias por intención, categoría y contexto.'
-        : 'No encontramos una coincidencia exacta; te mostramos rutas amplias para explorar.',
-      results:fallback.map(({search_text,score,...r})=>r)
+      ok:true,query:q,
+      interpretation:need.category
+        ? 'Entendimos una posible ruta: '+need.goal+'. Puedes explorar otras alternativas.'
+        : 'Necesitamos un poco más de contexto para orientar tu búsqueda.',
+      companion:need,
+      results:scored.map(({search_text,score,...r})=>r)
     });
   }catch(error){
     console.error('bravo search failed',error);
