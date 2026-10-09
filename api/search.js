@@ -40,6 +40,23 @@ async function ensureCatalog(){
   }
 }
 
+async function getApprovedPartners(){
+  // Migration 003 may not have been applied yet. Keep demo search working.
+  const availability=await sql`SELECT to_regclass('public.bravo_partners') AS partners, to_regclass('public.bravo_partner_services') AS services`;
+  if(!availability[0]?.partners||!availability[0]?.services)return [];
+  const rows=await sql`
+    SELECT s.id::text AS id,p.display_name AS name,s.category,
+      s.title AS type, 'Servicio publicado'::text AS reference,
+      s.description AS reason,
+      (p.display_name || ' ' || s.title || ' ' || s.category || ' ' || s.description) AS search_text,
+      p.id::text AS partner_id
+    FROM bravo_partner_services s
+    JOIN bravo_partners p ON p.id=s.partner_id
+    WHERE p.status='approved' AND s.active=true
+    ORDER BY s.created_at DESC LIMIT 250
+  `;
+  return rows.map(r=>({...r,id:'partner:'+r.id,source:'partner',verified:true}));
+}
 export default async function handler(req,res){
   if(req.method!=='GET'){
     res.setHeader('Allow','GET');
@@ -56,7 +73,9 @@ export default async function handler(req,res){
       WHERE active=true
       ORDER BY created_at ASC
     `;
-    const scored=rows.map(r=>({...r,score:rankListing(r,need,q)}))
+    const partnerRows=await getApprovedPartners();
+    const all=[...partnerRows,...rows.map(r=>({...r,source:'demo',verified:false}))];
+    const scored=all.map(r=>({...r,score:rankListing(r,need,q)}))
       .filter(r=>r.score>0).sort((a,b)=>b.score-a.score).slice(0,6);
     return res.status(200).json({
       ok:true,query:q,
@@ -64,7 +83,8 @@ export default async function handler(req,res){
         ? 'Entendimos una posible ruta: '+need.goal+'. Puedes explorar otras alternativas.'
         : 'Necesitamos un poco más de contexto para orientar tu búsqueda.',
       companion:need,
-      results:scored.map(({search_text,score,...r})=>r)
+      results:scored.map(({search_text,score,...r})=>r),
+      catalog:{approvedPartners:partnerRows.length,demoResults:scored.filter(r=>r.source==='demo').length}
     });
   }catch(error){
     console.error('bravo search failed',error);
