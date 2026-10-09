@@ -82,7 +82,7 @@ async function go(refined=false){
     if(!refined)document.getElementById('companionAnswer').value='';
     if(!data.results.length)rs.textContent+=' Todavía no hay opciones coincidentes; puedes precisar tu necesidad.';
 
-    cards.innerHTML=data.results.map((x,i)=>'<article class="card"><small>Ejemplo · '+escapeBravo(x.category)+'</small><h3>'+escapeBravo(x.name)+'</h3><p>'+escapeBravo(x.type)+' · '+escapeBravo(x.reference)+'</p><div class="why"><b>POR QUÉ PODRÍA SERVIRTE</b><br>'+escapeBravo(x.reason)'</div><div class="cardActions"><button onclick="openSearchSpace('+i+')">Ver opción →</button><button class="secondary" onclick="addSearchCompare('+i+')">＋ Comparar</button></div></article>').join('');
+    cards.innerHTML=data.results.map((x,i)=>'<article class="card"><small>Ejemplo · '+escapeBravo(x.category)+'</small><h3>'+escapeBravo(x.name)+'</h3><p>'+escapeBravo(x.type)+' · '+escapeBravo(x.reference)+'</p><div class="why"><b>POR QUÉ PODRÍA SERVIRTE</b><br>'+escapeBravo(x.reason)+'</div><div class="cardActions"><button onclick="openSearchSpace('+i+')">Ver opción →</button><button class="secondary" onclick="addSearchCompare('+i+')">＋ Comparar</button></div></article>').join('');
     window.bravoSearchResults=data.results;
     window.bravoCompanionNeed=data.companion||null;
     companionSession.goal=data.companion?.goal||"";saveCompanionContext();
