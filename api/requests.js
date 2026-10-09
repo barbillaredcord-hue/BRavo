@@ -27,7 +27,10 @@ export default async function handler(req, res) {
 
   try {
     await ensureSchema();
-    const { id, business, category, need, goal, details = '', contact } = req.body || {};
+    const { id, business, category, need, goal, details = '', contact, listingId } = req.body || {};
+    // No commercial leads to illustrative catalog entries. Future real listings
+    // require a server-side verified partner ownership/status lookup.
+    return res.status(403).json({ ok: false, error: 'Las solicitudes comerciales están pausadas hasta habilitar proveedores verificados.' });
     if (![id, business, category, need, goal, contact].every(v => typeof v === 'string' && v.trim())) {
       return res.status(400).json({ ok: false, error: 'Invalid request' });
     }
