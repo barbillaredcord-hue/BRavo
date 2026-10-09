@@ -61,16 +61,22 @@ async function refineCompanion(){
  await go(true);
 }
 async function go(refined=false){
-  const value=q.value.trim();
+  const value=document.getElementById('q').value.trim();
   if(!refined){companionOriginalNeed=value;companionSession={initial:value,refinements:[],goal:"",selected:[]};saveCompanionContext();}
   if(!value){q.focus();return}
   const button=document.querySelector('.search button');
   const original=button.textContent;
   button.disabled=true;button.textContent='Buscando…';
+  const status=document.getElementById('rs');
+  document.getElementById('rt').textContent='Consultando BR Companion…';
+  status.textContent='Estamos consultando las opciones. Si falla la conexión, verás el motivo aquí.';
+  document.getElementById('route').classList.remove('hidden');
+  document.getElementById('route').scrollIntoView({behavior:'smooth'});
   try{
     const response=await fetch('/api/search?q='+encodeURIComponent(value));
-    if(!response.ok)throw new Error('search failed');
+    if(!response.ok){let info='';try{info=(await response.json()).error||''}catch(e){}throw new Error('HTTP '+response.status+(info?' · '+info:''));}
     const data=await response.json();
+    if(!Array.isArray(data.results))throw new Error('Respuesta inesperada del buscador');
     rt.textContent='Opciones para: “'+value+'”';
     rs.textContent=data.interpretation+' BR Companion organiza posibilidades; tú decides cuál explorar.';
     pills.innerHTML='<span class="pill">'+data.results.length+' opciones encontradas</span>';
@@ -90,7 +96,8 @@ async function go(refined=false){
     route.classList.remove('hidden');
     route.scrollIntoView({behavior:'smooth'});
   }catch(error){
-    rs.textContent='No pudimos consultar BRavo en este momento. Intenta de nuevo.';
+    rt.textContent='No se pudo completar la búsqueda';
+    rs.textContent='Error de consulta: '+(error?.message||'Error desconocido')+'. Puedes intentarlo de nuevo.';
     route.classList.remove('hidden');
     route.scrollIntoView({behavior:'smooth'});
   }finally{button.disabled=false;button.textContent=original}
