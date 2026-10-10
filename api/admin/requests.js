@@ -1,28 +1,10 @@
 import { neon } from '@neondatabase/serverless';
-import { createRemoteJWKSet, jwtVerify } from 'jose';
-
+import { authorizeAdmin } from '../../lib/adminAuth.js';
 const sql = neon(process.env.DATABASE_URL);
-const authBase = process.env.NEON_AUTH_BASE_URL;
-const allowedEmail = (process.env.BRAVO_ADMIN_EMAIL || '').toLowerCase();
-const keys = createRemoteJWKSet(new URL(authBase + '/.well-known/jwks.json'));
-const issuer = new URL(authBase).origin;
-
-async function authorize(req) {
-  const header = req.headers.authorization || '';
-  if (!header.toLowerCase().startsWith('bearer ')) {
-    const error = new Error('Unauthorized'); error.status = 401; throw error;
-  }
-  const verified = await jwtVerify(header.slice(7), keys, { issuer });
-  const email = String(verified.payload.email || '').toLowerCase();
-  if (!email || email !== allowedEmail) {
-    const error = new Error('Forbidden'); error.status = 403; throw error;
-  }
-  return verified.payload;
-}
 
 export default async function handler(req, res) {
   try {
-    const user = await authorize(req);
+    const user = await authorizeAdmin(req);
     if (req.method === 'GET') {
       const rows = await sql`SELECT id, created_at, business, category, need, goal, details, contact, status FROM bravo_requests ORDER BY created_at DESC LIMIT 200`;
       return res.status(200).json({ ok: true, user: { email: user.email }, requests: rows });
