@@ -27,9 +27,11 @@ export default async function handler(req,res){
   if(!result.verified||!result.registrationInfo?.credential)return fail(res,401,'No se pudo verificar el registro');
   const credential=result.registrationInfo.credential;
   const transports=Array.isArray(response.response.transports)?response.response.transports.filter(x=>typeof x==='string').slice(0,8):[];
-  await sql`INSERT INTO bravo_admin_passkeys(credential_id,admin_email,public_key,counter,transports)
-    VALUES(${credential.id},${email},${Buffer.from(credential.publicKey)},${credential.counter},${JSON.stringify(transports)}::jsonb)
-    ON CONFLICT (credential_id) DO NOTHING`;
+  const publicKeyHex=Buffer.from(credential.publicKey).toString('hex');
+  const saved=await sql`INSERT INTO bravo_admin_passkeys(credential_id,admin_email,public_key,counter,transports)
+    VALUES(${credential.id},${email},decode(${publicKeyHex},'hex'),${credential.counter},${JSON.stringify(transports)}::jsonb)
+    ON CONFLICT (credential_id) DO NOTHING RETURNING credential_id`;
+  if(saved.length!==1)return fail(res,409,'La passkey ya existe; intenta iniciar sesión');
   return res.status(201).json({ok:true,registered:true});
  }catch(e){console.error('passkey enrollment verification failed',e);return fail(res,401,'Registro no autorizado o inválido');}
 }
