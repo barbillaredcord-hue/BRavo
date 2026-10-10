@@ -6,7 +6,7 @@ const msg=t=>{const e=document.getElementById('msg');if(e)e.textContent=t||''};
 async function bearer(){const s=await authClient.getSession();const t=s?.data?.session?.access_token||s?.data?.session?.accessToken||await authClient.getJWTToken?.();if(!t)throw new Error('No active session');return t}
 async function load(){let headers={};try{headers.Authorization='Bearer '+await bearer()}catch{}const r=await fetch('/api/admin/requests',{headers,credentials:'same-origin'});if(!r.ok)throw new Error(r.status===403?'Esta cuenta no tiene acceso al Admin.':'No se pudo cargar el Admin.');const d=await r.json();rows=d.requests||[];login.classList.add('hidden');admin.classList.remove('hidden');populateCategories();render(stateFilter)}
 async function google(){msg('Abriendo Google…');await authClient.signIn.social({provider:'google',callbackURL:location.origin+'/admin.html'})}
-async function signOut(){await fetch('/api/admin/passkey-logout',{method:'POST',credentials:'same-origin'});await authClient.signOut().catch(()=>{});rows=[];admin.classList.add('hidden');login.classList.remove('hidden');msg('Sesión cerrada.')}
+async function signOut(){const r=await fetch('/api/admin/passkey-logout',{method:'POST',credentials:'same-origin'});if(!r.ok)throw new Error('No se pudo cerrar la sesión de passkey.');await authClient.signOut().catch(()=>{});rows=[];admin.classList.add('hidden');login.classList.remove('hidden');msg('Sesión cerrada.')}
 async function updateStatus(id,status){let headers={'Content-Type':'application/json'};try{headers.Authorization='Bearer '+await bearer()}catch{}const r=await fetch('/api/admin/requests',{method:'PATCH',credentials:'same-origin',headers,body:JSON.stringify({id,status})});if(!r.ok)throw new Error('No se pudo actualizar el estado.');await load();select(id)}
 function populateCategories(){const s=document.getElementById('categoryFilter');if(!s)return;const cats=[...new Set(rows.map(x=>x.category).filter(Boolean))];s.innerHTML='<option value="all">Todas las categorías</option>'+cats.map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join('');s.value=categoryFilter}
 function statusClass(s){return s==='Nueva'?'new':s==='En proceso'?'progress':'closed'}
@@ -34,7 +34,7 @@ async function passkeyLogin(){
 window.adminPasskeyLogin=()=>passkeyLogin().catch(e=>msg(e.message||'No se pudo iniciar con passkey'));
 
 window.adminGoogleLogin=()=>google().catch(e=>msg(e.message||'No se pudo iniciar con Google.'));
-window.adminSignOut=()=>signOut();window.adminRender=render;window.adminSelect=select;
+window.adminSignOut=()=>signOut().catch(e=>msg(e.message));window.adminRender=render;window.adminSelect=select;
 window.adminSearch=v=>{query=v.toLowerCase().trim();render(stateFilter)};
 window.adminCategory=v=>{categoryFilter=v;render(stateFilter)};
 window.adminSaveDetail=id=>updateStatus(id,document.getElementById('detailStatus').value).catch(e=>alert(e.message));
