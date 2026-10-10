@@ -31,6 +31,32 @@ async function passkeyLogin(){
  const result=await verify.json();if(!verify.ok)throw new Error(result.error||'Passkey no autorizada');
  await load();msg('');
 }
+
+async function enrollPasskey(){
+ if(!window.PublicKeyCredential||!navigator.credentials)throw new Error('Este navegador no admite passkeys.');
+ const field=document.getElementById('bootstrapSecret');
+ const secret=field?.value.trim();
+ if(!secret||secret.length<43)throw new Error('Introduce el código privado de activación de Vercel.');
+ msg('Preparando registro seguro…');
+ const headers={Authorization:'Bearer '+secret,'Content-Type':'application/json'};
+ const start=await fetch('/api/admin/passkey-register-options',{method:'POST',headers,credentials:'same-origin'});
+ const data=await start.json();if(!start.ok)throw new Error(data.error||'No se pudo preparar el registro');
+ const options=data.options;
+ options.challenge=fromBase64url(options.challenge);
+ options.user.id=fromBase64url(options.user.id);
+ options.excludeCredentials=(options.excludeCredentials||[]).map(x=>({...x,id:fromBase64url(x.id)}));
+ const credential=await navigator.credentials.create({publicKey:options});
+ if(!credential)throw new Error('No se creó una passkey');
+ const response={id:credential.id,rawId:toBase64url(credential.rawId),type:credential.type,
+ response:{attestationObject:toBase64url(credential.response.attestationObject),clientDataJSON:toBase64url(credential.response.clientDataJSON),transports:credential.response.getTransports?.()||[]},
+ clientExtensionResults:credential.getClientExtensionResults()};
+ const end=await fetch('/api/admin/passkey-register-verify',{method:'POST',headers,credentials:'same-origin',body:JSON.stringify({response})});
+ const result=await end.json();if(!end.ok)throw new Error(result.error||'No se pudo completar el registro');
+ field.value='';
+ msg('Passkey registrada. Ahora selecciona «Entrar con passkey / Touch ID».');
+}
+window.adminEnrollPasskey=()=>enrollPasskey().catch(e=>{const field=document.getElementById('bootstrapSecret');if(field)field.value='';msg(e.message||'Error al registrar passkey')});
+
 window.adminPasskeyLogin=()=>passkeyLogin().catch(e=>msg(e.message||'No se pudo iniciar con passkey'));
 
 window.adminGoogleLogin=()=>google().catch(e=>msg(e.message||'No se pudo iniciar con Google.'));
