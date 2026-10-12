@@ -5,6 +5,12 @@ import { createHash, randomBytes } from 'node:crypto';
 const hash=s=>createHash('sha256').update(s).digest('hex');
 const b64url=s=>Buffer.from(s,'base64url').toString('utf8');
 const error=(res,status,message)=>res.status(status).json({ok:false,error:message});
+const publicKeyBytes=value=>{
+ if(value instanceof Uint8Array)return value;
+ if(typeof value==='string')return new Uint8Array(Buffer.from(value.startsWith('\\x')?value.slice(2):value,'hex'));
+ if(value&&value.type==='Buffer'&&Array.isArray(value.data))return Uint8Array.from(value.data);
+ throw new Error('Formato de clave pública no reconocido');
+};
 
 export default async function handler(req,res){
  res.setHeader('Cache-Control','no-store');
@@ -30,7 +36,7 @@ export default async function handler(req,res){
   const verification=await verifyAuthenticationResponse({
    response,expectedChallenge:clientData.challenge,expectedOrigin:origin,expectedRPID:rpID,
    requireUserVerification:true,
-   credential:{id:credential.credential_id,publicKey:new Uint8Array(credential.public_key),counter:Number(credential.counter),transports:credential.transports||[]}
+   credential:{id:credential.credential_id,publicKey:publicKeyBytes(credential.public_key),counter:Number(credential.counter),transports:credential.transports||[]}
   });
   if(!verification.verified)return error(res,401,'Verificación de passkey fallida');
   const nextCounter=verification.authenticationInfo.newCounter;
