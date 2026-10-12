@@ -58,6 +58,46 @@ async function enrollPasskey(){
 }
 window.adminEnrollPasskey=()=>enrollPasskey().catch(e=>{const field=document.getElementById('bootstrapSecret');if(field)field.value='';msg(e.message||'Error al registrar passkey')});
 
+
+const adminViews=['requests','stats','community','settings'];
+window.adminView=async name=>{
+ if(!adminViews.includes(name))return;
+ for(const view of adminViews){
+  document.getElementById(view+'View')?.classList.toggle('hidden',view!==name);
+  const nav=document.getElementById('nav'+view[0].toUpperCase()+view.slice(1));
+  nav?.classList.toggle('active',view===name);
+ }
+ const labels={requests:'Panel de solicitudes',stats:'Estadísticas',community:'Comunidad y proveedores',settings:'Configuración'};
+ document.querySelector('.header h1').textContent=labels[name];
+ if(name==='community')await window.adminRefreshCommunity();
+ if(name==='stats'){
+  const categories=[...new Set(rows.map(r=>r.category).filter(Boolean))];
+  document.getElementById('statsSummary').textContent=rows.length+' solicitudes en total · '+rows.filter(r=>r.status==='Nueva').length+' nuevas · '+categories.length+' categorías.';
+ }
+};
+window.adminRefreshCommunity=async()=>{
+ const status=document.getElementById('communityStatus');
+ const list=document.getElementById('communityList');
+ status.textContent='Consultando solicitudes…';list.replaceChildren();
+ try{
+  const r=await fetch('/api/admin/partners',{credentials:'same-origin',cache:'no-store'});
+  if(!r.ok)throw new Error('No se pudo consultar la bandeja de proveedores');
+  const data=await r.json();
+  const items=data.applications||[];
+  status.textContent=items.length+' solicitudes de proveedores (solo lectura).';
+  if(!items.length){list.textContent='Todavía no hay solicitudes.';return}
+  for(const item of items){
+   const card=document.createElement('article');card.style.cssText='padding:15px 0;border-top:1px solid #dce5de';
+   const title=document.createElement('strong');title.textContent=item.business_name||'Negocio sin nombre';card.append(title);
+   for(const value of [item.service_description,item.contact_email,item.website_url,'Estado: '+(item.status||'pending_review')]){
+    if(!value)continue;
+    const line=document.createElement('p');line.style.cssText='margin:5px 0;overflow-wrap:anywhere';line.textContent=value;card.append(line);
+   }
+   list.append(card);
+  }
+ }catch(e){status.textContent=e.message||'Error al cargar proveedores'}
+};
+
 window.adminPasskeyLogin=()=>passkeyLogin().catch(e=>msg(e.message||'No se pudo iniciar con passkey'));
 
 window.adminGoogleLogin=()=>google().catch(e=>msg(e.message||'No se pudo iniciar con Google.'));
