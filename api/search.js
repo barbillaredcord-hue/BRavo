@@ -42,8 +42,8 @@ async function ensureCatalog(){
 
 async function getApprovedPartners(){
   // Migration 003 may not have been applied yet. Keep demo search working.
-  const availability=await sql`SELECT to_regclass('public.bravo_partners') AS partners, to_regclass('public.bravo_partner_services') AS services`;
-  if(!availability[0]?.partners||!availability[0]?.services)return [];
+  const availability=await sql`SELECT to_regclass('public.bravo_partners') AS partners, to_regclass('public.bravo_partner_services') AS services, to_regclass('public.bravo_partner_domains') AS domains`;
+  if(!availability[0]?.partners||!availability[0]?.services||!availability[0]?.domains)return [];
   const rows=await sql`
     SELECT s.id::text AS id,p.display_name AS name,s.category,
       s.title AS type, 'Servicio publicado'::text AS reference,
@@ -53,9 +53,10 @@ async function getApprovedPartners(){
     FROM bravo_partner_services s
     JOIN bravo_partners p ON p.id=s.partner_id
     WHERE p.status='approved' AND s.active=true
+      AND EXISTS (SELECT 1 FROM bravo_partner_domains d WHERE d.partner_id=p.id AND d.verified_at IS NOT NULL)
     ORDER BY s.created_at DESC LIMIT 250
   `;
-  return rows.map(r=>({...r,id:'partner:'+r.id,source:'partner',verified:true}));
+  return rows.map(r=>({...r,id:'partner:'+r.id,source:'partner',verified:false}));
 }
 export default async function handler(req,res){
   if(req.method!=='GET'){
