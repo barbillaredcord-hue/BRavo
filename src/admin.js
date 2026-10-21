@@ -75,6 +75,13 @@ window.adminView=async name=>{
   document.getElementById('statsSummary').textContent=rows.length+' solicitudes en total · '+rows.filter(r=>r.status==='Nueva').length+' nuevas · '+categories.length+' categorías.';
  }
 };
+window.adminReviewPartner=async(id,status,name)=>{
+ const verb=status==='approved'?'APROBAR':'RECHAZAR';
+ if(!confirm(verb+' la solicitud de '+name+'? Esta decisión es interna y no publica el negocio.'))return;
+ const r=await fetch('/api/admin/partners',{method:'PATCH',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,status,confirmation:'REVISADO_MANUALMENTE'})});
+ const data=await r.json();if(!r.ok){alert(data.error||'No se pudo guardar la revisión');return}
+ await window.adminRefreshCommunity();
+};
 window.adminRefreshCommunity=async()=>{
  const status=document.getElementById('communityStatus');
  const list=document.getElementById('communityList');
@@ -92,6 +99,14 @@ window.adminRefreshCommunity=async()=>{
    for(const value of [item.service_description,item.contact_email,item.website_url,'Estado: '+(item.status||'pending_review')]){
     if(!value)continue;
     const line=document.createElement('p');line.style.cssText='margin:5px 0;overflow-wrap:anywhere';line.textContent=value;card.append(line);
+   }
+   if(item.status==='pending_review'){
+    const actions=document.createElement('div');actions.style.cssText='display:flex;gap:10px;margin-top:10px;flex-wrap:wrap';
+    for(const [label,next] of [['Marcar revisado y aprobar','approved'],['Rechazar solicitud','rejected']]){
+     const button=document.createElement('button');button.className='outline';button.textContent=label;
+     button.addEventListener('click',()=>window.adminReviewPartner(item.id,next,item.business_name));actions.append(button);
+    }
+    card.append(actions);
    }
    list.append(card);
   }
