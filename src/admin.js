@@ -132,3 +132,31 @@ window.addEventListener('DOMContentLoaded',async()=>{
     msg(e.message==='No active session'?'':e.message);
   }
 });
+
+async function refreshPartnerDrafts(){
+ const select=document.getElementById('partnerDrafts'),status=document.getElementById('partnerEditorStatus');
+ if(!select)return;
+ try{
+  const r=await fetch('/api/admin/partner-editor',{credentials:'same-origin'});
+  const data=await r.json();if(!r.ok)throw new Error(data.error||'No se pudo cargar el editor');
+  select.replaceChildren(new Option('Selecciona un borrador',''));
+  for(const p of data.partners.filter(p=>p.status==='draft'))select.add(new Option(p.display_name,p.id));
+  status.textContent=data.partners.length+' negocios registrados; '+data.services.length+' servicios.';
+ }catch(e){status.textContent=e.message}
+}
+for(const [formId,action] of [['partnerForm','create_partner'],['serviceForm','create_service']]){
+ const form=document.getElementById(formId);
+ form?.addEventListener('submit',async event=>{
+  event.preventDefault();
+  const status=document.getElementById('partnerEditorStatus');
+  const body=Object.fromEntries(new FormData(form));body.action=action;
+  const button=form.querySelector('button[type=submit]');button.disabled=true;
+  try{
+   const r=await fetch('/api/admin/partner-editor',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+   const data=await r.json();if(!r.ok)throw new Error(data.error||'No se pudo guardar');
+   form.reset();await refreshPartnerDrafts();status.textContent=data.notice||'Guardado';
+  }catch(e){status.textContent=e.message}finally{button.disabled=false}
+ });
+}
+const oldAdminView=window.adminView;
+window.adminView=async name=>{await oldAdminView(name);if(name==='community')await refreshPartnerDrafts()};
